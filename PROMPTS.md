@@ -75,3 +75,7 @@ Hardy the hard-hat robot (`components/Hardy.tsx`, pure SVG, blink loop, moods ha
 ## Step 9 - Expressive animated customer + futuristic call screen
 
 No new LLM prompt. `CustomerFace` is an SVG person (per-scenario look) driven by one rAF loop: mouth follows `getOutputVolume()`, brows/eyes/mouth lerp between moods (furious -> annoyed -> neutral -> relieved -> won over), blinking, gaze drift, head bob, tremble when furious, audio-reactive halo rings. A live "Customer patience" meter (keyword heuristic in `lib/patience.ts`) changes the customer's mood as the trainee acknowledges, owns and commits to a time. Live waveform, LIVE timer, glass transcript, type-instead keyboard. With no `NEXT_PUBLIC_ELEVENLABS_AGENT_ID` the call runs in scripted **demo mode** so the UI can be explored offline.
+
+## Step 10 - Animated debrief
+
+No new prompt. Debrief now shows Hardy reacting to the total (cool / happy / thinking / sad), an animated score ring with count-up, staggered score bars, and Nailed it / Level up / Hardy's take cards. Loading state is Hardy "thinking" with a scanning bar.
