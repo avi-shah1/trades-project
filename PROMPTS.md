@@ -101,3 +101,7 @@ New `MicCheck` step before every real call: live input-level meter (Web Audio an
 
 ### Fix: voice call dropping
 Dev log only showed a generic LiveKit "error reading from signal stream" (default WebRTC transport). Forced `connectionType: "websocket"` and made the dropped-call message include ElevenLabs' actual disconnect reason/close code (also `console.warn`ed).
+17. > The call dropped (the call was closed). Check the agent ID, and that System prompt and First message overrides are enabled in the agent's Security tab.
+
+### Fix: call closed by our own side (`reason: 'user'`)
+Root cause: `ConversationProvider` ends the session in its unmount cleanup; StrictMode's simulated unmount killed the session right after `startSession`. Now `startSession` runs on a `setTimeout(0)` that the effect cleanup cancels, so it starts after the simulated teardown.

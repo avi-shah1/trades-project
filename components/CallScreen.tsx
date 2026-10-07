@@ -31,7 +31,6 @@ function RealCall({ scenario, onEnd, onCancel, agentId, choice }: Props & { agen
   const [error, setError] = useState<string | null>(null);
   const notice = choice.textOnly ? "Voice is off for this call. Type your replies below." : null;
   const [typing, setTyping] = useState(choice.textOnly);
-  const started = useRef(false);
   const ending = useRef(false);
 
   const conv = useConversation({
@@ -62,22 +61,24 @@ function RealCall({ scenario, onEnd, onCancel, agentId, choice }: Props & { agen
   const { startSession, endSession, sendUserMessage, status, isSpeaking, getOutputVolume, getInputVolume } = conv;
 
   useEffect(() => {
-    if (started.current) return;
-    started.current = true;
-    startSession({
-      agentId,
-      connectionType: "websocket",
-      inputDeviceId: choice.deviceId,
-      overrides: {
-        agent: {
-          prompt: { prompt: scenario.customerPrompt },
-          firstMessage: scenario.firstMessage,
+    // ConversationProvider ends the session when it unmounts, and React StrictMode (dev)
+    // simulates an unmount right after mount. Starting on a timer that cleanup cancels means
+    // the real start happens after that simulated teardown; a genuine unmount still ends the call.
+    const timer = setTimeout(() => {
+      startSession({
+        agentId,
+        connectionType: "websocket",
+        inputDeviceId: choice.deviceId,
+        overrides: {
+          agent: {
+            prompt: { prompt: scenario.customerPrompt },
+            firstMessage: scenario.firstMessage,
+          },
+          ...(choice.textOnly ? { conversation: { textOnly: true } } : {}),
         },
-        ...(choice.textOnly ? { conversation: { textOnly: true } } : {}),
-      },
-    });
-    // no cleanup: React StrictMode (dev) would end the call right after starting it.
-    // The call is ended explicitly from onEnd / onBack below.
+      });
+    }, 0);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
