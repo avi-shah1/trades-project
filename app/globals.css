@@ -1,26 +1,131 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink: #070b14;
+  --panel: rgba(255, 255, 255, 0.06);
+  --line: rgba(255, 255, 255, 0.12);
+  --hivis: #ffc21a;
+  --cyan: #29e3ff;
+  --magenta: #ff3d8b;
+  --lime: #7cff6b;
+  --foreground: #e8ecf6;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-ink: var(--ink);
+  --color-hivis: var(--hivis);
+  --color-cyan: var(--cyan);
+  --color-magenta: var(--magenta);
+  --color-lime: var(--lime);
+  --font-sans: var(--font-grotesk);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
+  background: var(--ink);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-grotesk), system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+/* glass surface */
+.glass {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.text-glow {
+  text-shadow: 0 0 24px rgba(255, 194, 26, 0.45);
+}
+
+/* backdrop: drifting aurora + perspective grid */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: radial-gradient(120% 80% at 50% 0%, #101a33 0%, var(--ink) 60%);
+}
+.aurora::before,
+.aurora::after {
+  content: "";
+  position: absolute;
+  width: 70vmax;
+  height: 70vmax;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+  animation: drift 18s ease-in-out infinite alternate;
+}
+.aurora::before {
+  background: radial-gradient(circle, var(--cyan), transparent 65%);
+  top: -30vmax;
+  left: -25vmax;
+}
+.aurora::after {
+  background: radial-gradient(circle, var(--magenta), transparent 65%);
+  bottom: -35vmax;
+  right: -30vmax;
+  animation-duration: 24s;
+  animation-direction: alternate-reverse;
+}
+.grid-floor {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 45%;
+  background-image:
+    linear-gradient(rgba(41, 227, 255, 0.18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(41, 227, 255, 0.18) 1px, transparent 1px);
+  background-size: 44px 44px;
+  transform: perspective(400px) rotateX(62deg);
+  transform-origin: bottom;
+  mask-image: linear-gradient(to top, black, transparent 85%);
+  animation: grid-scroll 3s linear infinite;
+}
+
+@keyframes drift {
+  to {
+    transform: translate(12vmax, 8vmax) scale(1.15);
+  }
+}
+@keyframes grid-scroll {
+  to {
+    background-position: 0 44px, 0 0;
+  }
+}
+@keyframes float {
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes shimmer {
+  to {
+    background-position: 200% center;
+  }
+}
+
+.shimmer-text {
+  background: linear-gradient(90deg, var(--hivis), #fff3c4, var(--cyan), var(--hivis));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 5s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -62,3 +62,8 @@ No new prompt; renders the JSON from the Step 4 prompt (score bars, strength, fi
 ## Step 6 - Polish
 
 Added README with run notes; viewport and safe-area handling done in layout/page. No new prompts.
+6. > what we also really care about is make the user experience futuristic and creative, we should do a voice agent (like elevenlabs - imma put the api key in soon) and create an animated person that is on the screen and is expressive. I want a strong branding and a memorable mascot. and polished animations
+
+## Step 7 - Futuristic brand foundation
+
+Brand: dark "hi-vis meets neon" look. Tokens: ink #070b14, hi-vis amber #ffc21a, cyan #29e3ff, magenta #ff3d8b, lime #7cff6b. Font Space Grotesk. Animated aurora + perspective grid backdrop, glass panels, shimmer wordmark. Mascot: **Hardy**, a hard-hat robot with a glowing visor face. Customers are expressive SVG people with mood-driven faces, audio-reactive mouths and a "Patience" meter.
