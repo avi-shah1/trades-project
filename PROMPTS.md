@@ -93,3 +93,7 @@ Cause: the start effect's cleanup called `endSession()`; React StrictMode (dev) 
 
 ### Fix: microphone
 Added an explicit `getUserMedia` pre-flight before `startSession` with specific messages (blocked / no device / in use). If the mic is unavailable the call starts in `textOnly` mode and the typing box opens.
+15. > thing is it says that yes it is allowed the microphone - but still can't hear me. when i began the programme there was no "test mic works" at all
+
+### Fix: mic check screen
+New `MicCheck` step before every real call: live input-level meter (Web Audio analyser), "Hearing you" confirmation, input device picker (passed to ElevenLabs as `inputDeviceId`), and a "Skip, I'll type instead" text-only option. Replaces the earlier silent `getUserMedia` pre-flight.

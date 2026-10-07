@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import CallView, { type CallStatus } from "./CallView";
+import MicCheck, { type MicChoice } from "./MicCheck";
 import { computePatience } from "@/lib/patience";
 import type { Message, Scenario } from "@/lib/types";
 
@@ -15,19 +16,21 @@ type Props = {
 };
 
 export default function CallScreen(props: Props) {
+  const [choice, setChoice] = useState<MicChoice | null>(null);
   if (!AGENT_ID) return <DemoCall {...props} />;
+  if (!choice) return <MicCheck customerName={props.scenario.customerName} onContinue={setChoice} />;
   return (
     <ConversationProvider>
-      <RealCall {...props} agentId={AGENT_ID} />
+      <RealCall {...props} agentId={AGENT_ID} choice={choice} />
     </ConversationProvider>
   );
 }
 
-function RealCall({ scenario, onEnd, onCancel, agentId }: Props & { agentId: string }) {
+function RealCall({ scenario, onEnd, onCancel, agentId, choice }: Props & { agentId: string; choice: MicChoice }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [typing, setTyping] = useState(false);
+  const notice = choice.textOnly ? "Voice is off for this call. Type your replies below." : null;
+  const [typing, setTyping] = useState(choice.textOnly);
   const started = useRef(false);
   const ending = useRef(false);
 
@@ -55,37 +58,17 @@ function RealCall({ scenario, onEnd, onCancel, agentId }: Props & { agentId: str
   useEffect(() => {
     if (started.current) return;
     started.current = true;
-    (async () => {
-      // Ask for the mic up front so the browser prompt always appears and we can explain failures.
-      let textOnly = false;
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach((t) => t.stop());
-      } catch (e) {
-        textOnly = true;
-        const name = e instanceof DOMException ? e.name : "";
-        setNotice(
-          name === "NotAllowedError"
-            ? "Microphone is blocked. Click the lock icon in the address bar, set Microphone to Allow, then reload. You can still type replies."
-            : name === "NotFoundError"
-              ? "No microphone found. Plug one in, or type your replies."
-              : name === "NotReadableError"
-                ? "Your microphone is in use by another app. Close it and reload, or type your replies."
-                : "Couldn't access the microphone. You can still type your replies.",
-        );
-        setTyping(true);
-      }
-      startSession({
-        agentId,
-        overrides: {
-          agent: {
-            prompt: { prompt: scenario.customerPrompt },
-            firstMessage: scenario.firstMessage,
-          },
-          ...(textOnly ? { conversation: { textOnly: true } } : {}),
+    startSession({
+      agentId,
+      inputDeviceId: choice.deviceId,
+      overrides: {
+        agent: {
+          prompt: { prompt: scenario.customerPrompt },
+          firstMessage: scenario.firstMessage,
         },
-      });
-    })();
+        ...(choice.textOnly ? { conversation: { textOnly: true } } : {}),
+      },
+    });
     // no cleanup: React StrictMode (dev) would end the call right after starting it.
     // The call is ended explicitly from onEnd / onBack below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
