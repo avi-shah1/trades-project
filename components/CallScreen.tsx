@@ -1,43 +1,52 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useConversation } from "@elevenlabs/react";
-import Avatar from "./Avatar";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ConversationProvider, useConversation } from "@elevenlabs/react";
+import CallView, { type CallStatus } from "./CallView";
+import { computePatience } from "@/lib/patience";
 import type { Message, Scenario } from "@/lib/types";
 
 const AGENT_ID = process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID;
 
-export default function CallScreen({
-  scenario,
-  onEnd,
-  onCancel,
-}: {
+type Props = {
   scenario: Scenario;
   onEnd: (transcript: Message[]) => void;
   onCancel: () => void;
-}) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [error, setError] = useState<string | null>(
-    AGENT_ID ? null : "Missing NEXT_PUBLIC_ELEVENLABS_AGENT_ID in .env.local",
+};
+
+export default function CallScreen(props: Props) {
+  if (!AGENT_ID) return <DemoCall {...props} />;
+  return (
+    <ConversationProvider>
+      <RealCall {...props} agentId={AGENT_ID} />
+    </ConversationProvider>
   );
-  const bottomRef = useRef<HTMLDivElement>(null);
+}
+
+function RealCall({ scenario, onEnd, onCancel, agentId }: Props & { agentId: string }) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
 
-  const { startSession, endSession, status, isSpeaking } = useConversation({
+  const conv = useConversation({
     onMessage: ({ message, source }) => {
-      setMessages((prev) => [
-        ...prev,
-        { role: source === "ai" ? "customer" : "trainee", text: message },
-      ]);
+      const role = source === "ai" ? "customer" : "trainee";
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        // typed replies are added locally; skip the echo from the server
+        if (role === "trainee" && last?.role === "trainee" && last.text === message.trim()) return prev;
+        return [...prev, { role, text: message }];
+      });
     },
     onError: (message) => setError(String(message)),
   });
+  const { startSession, endSession, sendUserMessage, status, isSpeaking, getOutputVolume, getInputVolume } = conv;
 
   useEffect(() => {
-    if (!AGENT_ID || started.current) return;
+    if (started.current) return;
     started.current = true;
     startSession({
-      agentId: AGENT_ID,
+      agentId,
       overrides: {
         agent: {
           prompt: { prompt: scenario.customerPrompt },
@@ -45,85 +54,104 @@ export default function CallScreen({
         },
       },
     });
-  }, [scenario, startSession]);
+    return () => endSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const patience = useMemo(() => computePatience(messages, scenario.startPatience), [messages, scenario]);
+  const callStatus: CallStatus = error ? "error" : status === "connected" ? "live" : "connecting";
 
-  const handleEnd = useCallback(() => {
-    endSession();
-    onEnd(messages);
-  }, [endSession, messages, onEnd]);
-
-  const handleCancel = useCallback(() => {
-    endSession();
-    onCancel();
-  }, [endSession, onCancel]);
-
-  const connecting = status === "connecting" || (status === "disconnected" && !error);
+  const send = useCallback(
+    (text: string) => {
+      sendUserMessage(text);
+      setMessages((prev) => [...prev, { role: "trainee", text }]);
+    },
+    [sendUserMessage],
+  );
 
   return (
-    <div className="flex min-h-dvh flex-1 flex-col">
-      <div className="flex flex-col items-center pt-4">
-        <Avatar
-          emoji={scenario.emoji}
-          name={scenario.customerName}
-          speaking={isSpeaking}
-        />
-        <p className="mt-2 text-xs uppercase tracking-wide text-slate-400">
-          {error ? "Error" : connecting ? "Connecting…" : "On call"}
-        </p>
-      </div>
+    <CallView
+      scenario={scenario}
+      messages={messages}
+      status={callStatus}
+      error={error}
+      isSpeaking={isSpeaking}
+      patience={patience}
+      getOutLevel={getOutputVolume}
+      getInLevel={getInputVolume}
+      onSend={send}
+      onEnd={() => {
+        endSession();
+        onEnd(messages);
+      }}
+      onBack={() => {
+        endSession();
+        onCancel();
+      }}
+      demo={false}
+    />
+  );
+}
 
-      {error && (
-        <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
+const DEMO_REPLIES = [
+  "Hmm. I hear you, but I really need this sorted properly this time.",
+  "Okay... and when exactly can someone actually come out?",
+  "Alright. That sounds fair. Thanks for taking it seriously.",
+];
 
-      <div className="mt-4 flex-1 space-y-2 overflow-y-auto rounded-2xl bg-slate-100 p-3">
-        {messages.length === 0 && !error && (
-          <p className="text-center text-sm text-slate-400">
-            Transcript will appear here. Allow microphone access when asked.
-          </p>
-        )}
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            className={`flex ${m.role === "trainee" ? "justify-end" : "justify-start"}`}
-          >
-            <p
-              className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
-                m.role === "trainee"
-                  ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-900 shadow-sm"
-              }`}
-            >
-              {m.text}
-            </p>
-          </div>
-        ))}
-        <div ref={bottomRef} />
-      </div>
+/** No agent configured: a scripted customer so the whole UI can be explored offline. */
+function DemoCall({ scenario, onEnd, onCancel }: Props) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [status, setStatus] = useState<CallStatus>("connecting");
+  const [speaking, setSpeaking] = useState(false);
+  const replies = useRef(0);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-      <div className="pb-[max(1rem,env(safe-area-inset-bottom))] pt-4">
-        {error ? (
-          <button
-            onClick={handleCancel}
-            className="w-full rounded-full bg-slate-900 py-4 text-base font-semibold text-white active:scale-[0.98]"
-          >
-            Back
-          </button>
-        ) : (
-          <button
-            onClick={handleEnd}
-            className="w-full rounded-full bg-red-600 py-4 text-base font-semibold text-white active:scale-[0.98]"
-          >
-            End call
-          </button>
-        )}
-      </div>
-    </div>
+  const say = useCallback((text: string) => {
+    setMessages((prev) => [...prev, { role: "customer", text }]);
+    setSpeaking(true);
+    timers.current.push(setTimeout(() => setSpeaking(false), Math.max(1200, text.length * 55)));
+  }, []);
+
+  useEffect(() => {
+    const open = setTimeout(() => {
+      setStatus("live");
+      say(scenario.firstMessage);
+    }, 1200);
+    const pending = timers.current;
+    return () => {
+      clearTimeout(open);
+      pending.forEach(clearTimeout);
+    };
+  }, [scenario, say]);
+
+  const patience = useMemo(() => computePatience(messages, scenario.startPatience), [messages, scenario]);
+
+  const getOut = useCallback(() => (0.3 + 0.4 * Math.abs(Math.sin(performance.now() / 70)) * (0.6 + 0.4 * Math.random())), []);
+
+  const send = useCallback(
+    (text: string) => {
+      setMessages((prev) => [...prev, { role: "trainee", text }]);
+      const reply = DEMO_REPLIES[Math.min(replies.current++, DEMO_REPLIES.length - 1)];
+      timers.current.push(setTimeout(() => say(reply), 900));
+    },
+    [say],
+  );
+
+  return (
+    <CallView
+      scenario={scenario}
+      messages={messages}
+      status={status}
+      error={null}
+      isSpeaking={speaking}
+      patience={patience}
+      getOutLevel={getOut}
+      getInLevel={() => 0}
+      onSend={send}
+      onEnd={() => onEnd(messages)}
+      onBack={onCancel}
+      demo
+    />
   );
 }
