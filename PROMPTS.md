@@ -89,3 +89,7 @@ No new prompt. Debrief now shows Hardy reacting to the total (cool / happy / thi
 
 ### Fix: stuck on "Dialling…"
 Cause: the start effect's cleanup called `endSession()`; React StrictMode (dev) runs mount -> cleanup -> mount, which ended the call immediately while a ref guard prevented restarting. Removed the cleanup, added `onDisconnect` error messaging.
+14. > ok no it looks like microphone is not working - when i messaged it work but apart from that it's not working
+
+### Fix: microphone
+Added an explicit `getUserMedia` pre-flight before `startSession` with specific messages (blocked / no device / in use). If the mic is unavailable the call starts in `textOnly` mode and the typing box opens.

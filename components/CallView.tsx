@@ -14,6 +14,9 @@ export default function CallView({
   messages,
   status,
   error,
+  notice,
+  typing,
+  onTypingChange,
   isSpeaking,
   patience,
   getOutLevel,
@@ -27,6 +30,9 @@ export default function CallView({
   messages: Message[];
   status: CallStatus;
   error: string | null;
+  notice: string | null;
+  typing: boolean;
+  onTypingChange: (v: boolean) => void;
   isSpeaking: boolean;
   patience: number;
   getOutLevel: () => number;
@@ -37,7 +43,6 @@ export default function CallView({
   demo: boolean;
 }) {
   const [seconds, setSeconds] = useState(0);
-  const [typing, setTyping] = useState(demo);
   const [draft, setDraft] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const mood = moodFor(patience);
@@ -175,6 +180,9 @@ export default function CallView({
           Type your replies below.
         </p>
       )}
+      {notice && (
+        <p className="mt-3 rounded-xl border border-hivis/40 bg-hivis/10 px-3 py-2 text-xs text-hivis">{notice}</p>
+      )}
       {error && (
         <p className="mt-3 rounded-xl border border-magenta/40 bg-magenta/10 px-3 py-2 text-xs text-magenta">{error}</p>
       )}
@@ -224,7 +232,7 @@ export default function CallView({
         <div className="flex items-center gap-3">
           {!demo && (
             <button
-              onClick={() => setTyping((v) => !v)}
+              onClick={() => onTypingChange(!typing)}
               className="glass rounded-full px-5 py-4 text-sm font-semibold text-slate-200 active:scale-95"
               aria-pressed={typing}
             >

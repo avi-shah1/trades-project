@@ -26,6 +26,8 @@ export default function CallScreen(props: Props) {
 function RealCall({ scenario, onEnd, onCancel, agentId }: Props & { agentId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [typing, setTyping] = useState(false);
   const started = useRef(false);
   const ending = useRef(false);
 
@@ -53,15 +55,37 @@ function RealCall({ scenario, onEnd, onCancel, agentId }: Props & { agentId: str
   useEffect(() => {
     if (started.current) return;
     started.current = true;
-    startSession({
-      agentId,
-      overrides: {
-        agent: {
-          prompt: { prompt: scenario.customerPrompt },
-          firstMessage: scenario.firstMessage,
+    (async () => {
+      // Ask for the mic up front so the browser prompt always appears and we can explain failures.
+      let textOnly = false;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((t) => t.stop());
+      } catch (e) {
+        textOnly = true;
+        const name = e instanceof DOMException ? e.name : "";
+        setNotice(
+          name === "NotAllowedError"
+            ? "Microphone is blocked. Click the lock icon in the address bar, set Microphone to Allow, then reload. You can still type replies."
+            : name === "NotFoundError"
+              ? "No microphone found. Plug one in, or type your replies."
+              : name === "NotReadableError"
+                ? "Your microphone is in use by another app. Close it and reload, or type your replies."
+                : "Couldn't access the microphone. You can still type your replies.",
+        );
+        setTyping(true);
+      }
+      startSession({
+        agentId,
+        overrides: {
+          agent: {
+            prompt: { prompt: scenario.customerPrompt },
+            firstMessage: scenario.firstMessage,
+          },
+          ...(textOnly ? { conversation: { textOnly: true } } : {}),
         },
-      },
-    });
+      });
+    })();
     // no cleanup: React StrictMode (dev) would end the call right after starting it.
     // The call is ended explicitly from onEnd / onBack below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -84,6 +108,9 @@ function RealCall({ scenario, onEnd, onCancel, agentId }: Props & { agentId: str
       messages={messages}
       status={callStatus}
       error={error}
+      notice={notice}
+      typing={typing}
+      onTypingChange={setTyping}
       isSpeaking={isSpeaking}
       patience={patience}
       getOutLevel={getOutputVolume}
@@ -155,6 +182,9 @@ function DemoCall({ scenario, onEnd, onCancel }: Props) {
       messages={messages}
       status={status}
       error={null}
+      notice={null}
+      typing
+      onTypingChange={() => {}}
       isSpeaking={speaking}
       patience={patience}
       getOutLevel={getOut}
