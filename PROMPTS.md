@@ -58,3 +58,7 @@ No new prompt; renders the JSON from the Step 4 prompt (score bars, strength, fi
 3. > git branch -M main && git push -u origin main
 4. > Build a mobile-first Next.js app, "Tradie Talk." (full brief in Step 0 above)
 5. > Create a CLAUDE.md: one-page mobile-first app, no auth or DB, see @AGENTS.md, append every prompt I give you to PROMPTS.md, commit after each step. Also backfill PROMPTS.md with the prompts from this session so far.
+
+## Step 6 - Polish
+
+Added README with run notes; viewport and safe-area handling done in layout/page. No new prompts.
