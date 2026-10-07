@@ -48,3 +48,13 @@ User message: `Scenario: <title - blurb>` followed by the `TRAINEE:` / `CUSTOMER
 ## Step 5 - Debrief screen
 
 No new prompt; renders the JSON from the Step 4 prompt (score bars, strength, fix, model response).
+
+---
+
+## User prompts log (chronological, verbatim)
+
+1. > add a .gitignore for a Next.js project that ignores env files and node_modules
+2. > git add -A && git commit -m "init" && git push -u origin main
+3. > git branch -M main && git push -u origin main
+4. > Build a mobile-first Next.js app, "Tradie Talk." (full brief in Step 0 above)
+5. > Create a CLAUDE.md: one-page mobile-first app, no auth or DB, see @AGENTS.md, append every prompt I give you to PROMPTS.md, commit after each step. Also backfill PROMPTS.md with the prompts from this session so far.
