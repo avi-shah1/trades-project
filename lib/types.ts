@@ -31,6 +31,8 @@ export type Scenario = {
   blurb: string;
   emoji: string;
   customerName: string;
+  gender: "male" | "female";
+  voiceId: string;
   accent: string;
   heat: 1 | 2 | 3;
   startPatience: number;

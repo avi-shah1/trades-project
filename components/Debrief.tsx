@@ -56,7 +56,7 @@ export default function Debrief({
       const res = await fetch("/api/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scenarioId: scenario.id, transcript }),
+        body: JSON.stringify({ scenario: { title: scenario.title, blurb: scenario.blurb }, transcript }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Scoring failed");
@@ -64,7 +64,7 @@ export default function Debrief({
     } catch (e) {
       setError(e instanceof Error ? e.message : "Scoring failed");
     }
-  }, [scenario.id, transcript]);
+  }, [scenario.title, scenario.blurb, transcript]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

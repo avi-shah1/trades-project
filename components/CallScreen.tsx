@@ -54,7 +54,7 @@ function RealCall({ scenario, onEnd, onCancel, agentId, choice }: Props & { agen
             ? `the agent ended the call${details.closeReason ? `: ${details.closeReason}` : ""}${details.closeCode ? ` (code ${details.closeCode})` : ""}`
             : "the call was closed";
       setError(
-        `The call dropped (${why}). Check the agent ID, and that System prompt and First message overrides are enabled in the agent's Security tab.`,
+        `The call dropped (${why}). Check the agent ID, and that System prompt, First message and Voice overrides are enabled in the agent's Security tab.`,
       );
     },
   });
@@ -74,6 +74,7 @@ function RealCall({ scenario, onEnd, onCancel, agentId, choice }: Props & { agen
             prompt: { prompt: scenario.customerPrompt },
             firstMessage: scenario.firstMessage,
           },
+          tts: { voiceId: scenario.voiceId },
           ...(choice.textOnly ? { conversation: { textOnly: true } } : {}),
         },
       });

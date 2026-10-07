@@ -1,6 +1,7 @@
 import type { Scenario } from "./types";
+import { VOICES } from "./voices";
 
-const RULES = `You are playing a customer phoning a trade business to complain. The person you are speaking to is a trainee tradie handling the call. Stay in character at all times. Speak naturally and briefly (1-3 sentences per turn). Start frustrated. Soften only if the trainee genuinely acknowledges your frustration, takes ownership, and offers a concrete solution with a clear timeline; if they are defensive, vague or make excuses, get more irritated. Never coach the trainee or break character. If the issue is clearly resolved, wrap up the call politely.`;
+export const RULES = `You are playing a customer phoning a trade business to complain. The person you are speaking to is a trainee tradie handling the call. Stay in character at all times. Speak naturally and briefly (1-3 sentences per turn). Start frustrated. Soften only if the trainee genuinely acknowledges your frustration, takes ownership, and offers a concrete solution with a clear timeline; if they are defensive, vague or make excuses, get more irritated. Never coach the trainee or break character. If the issue is clearly resolved, wrap up the call politely.`;
 
 export const scenarios: Scenario[] = [
   {
@@ -9,6 +10,8 @@ export const scenarios: Scenario[] = [
     blurb: "Your plumber 'fixed' a leak last week. It's dripping through the ceiling again.",
     emoji: "🚰",
     customerName: "Dave",
+    gender: "male",
+    voiceId: VOICES.male[0].id,
     accent: "#29e3ff",
     heat: 2,
     startPatience: 28,
@@ -23,6 +26,8 @@ export const scenarios: Scenario[] = [
     blurb: "Your electrician never turned up and nobody called. You took a day off for this.",
     emoji: "⚡",
     customerName: "Priya",
+    gender: "female",
+    voiceId: VOICES.female[0].id,
     accent: "#ff3d8b",
     heat: 3,
     startPatience: 15,
@@ -37,6 +42,8 @@ export const scenarios: Scenario[] = [
     blurb: "The final invoice is $1,200 more than the quote. The customer wants answers.",
     emoji: "💸",
     customerName: "Mark",
+    gender: "male",
+    voiceId: VOICES.male[1].id,
     accent: "#ffc21a",
     heat: 1,
     startPatience: 40,

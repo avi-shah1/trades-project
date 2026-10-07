@@ -1,6 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
-import { scenarios } from "@/lib/scenarios";
 import type { Message, ScoreResult } from "@/lib/types";
 
 const MODEL = "claude-sonnet-5-5";
@@ -64,7 +63,7 @@ function parseResult(raw: string): ScoreResult {
 }
 
 export async function POST(req: Request) {
-  let body: { scenarioId?: string; transcript?: unknown };
+  let body: { scenario?: { title?: unknown; blurb?: unknown }; transcript?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -88,11 +87,12 @@ export async function POST(req: Request) {
     );
   }
 
-  const scenario = scenarios.find((s) => s.id === body.scenarioId);
+  const title = typeof body.scenario?.title === "string" ? body.scenario.title.slice(0, 120) : "";
+  const blurb = typeof body.scenario?.blurb === "string" ? body.scenario.blurb.slice(0, 400) : "";
   const text = transcript
     .map((m) => `${m.role === "trainee" ? "TRAINEE" : "CUSTOMER"}: ${m.text}`)
     .join("\n");
-  const userContent = `Scenario: ${scenario ? `${scenario.title} - ${scenario.blurb}` : "Customer complaint"}\n\nTranscript:\n${text}`;
+  const userContent = `Scenario: ${title ? `${title} - ${blurb}` : "Customer complaint"}\n\nTranscript:\n${text}`;
 
   try {
     const client = new Anthropic();

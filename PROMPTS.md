@@ -105,3 +105,8 @@ Dev log only showed a generic LiveKit "error reading from signal stream" (defaul
 
 ### Fix: call closed by our own side (`reason: 'user'`)
 Root cause: `ConversationProvider` ends the session in its unmount cleanup; StrictMode's simulated unmount killed the session right after `startSession`. Now `startSession` runs on a `setTimeout(0)` that the effect cleanup cancels, so it starts after the simulated teardown.
+18. > looks good. i also want different models on elevenLabs - like rn one is called Priya  but has a man's voice
+also be able to type in (or voice note in) any scenario rather than just select 3
+
+### Step 11 - Per-caller voices
+Each scenario has `gender` + `voiceId` (ElevenLabs premade voices in `lib/voices.ts`), sent as `overrides.tts.voiceId`. Requires the **Voice** override enabled in the agent's Security tab. `/api/score` now takes `{scenario:{title,blurb}, transcript}` so it works for any scenario.
