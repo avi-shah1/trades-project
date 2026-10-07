@@ -44,6 +44,7 @@ function RealCall({ scenario, onEnd, onCancel, agentId, choice }: Props & { agen
       });
     },
     onError: (message) => setError(String(message)),
+    onInterruption: () => console.warn("ElevenLabs: customer was interrupted by detected speech"),
     onDisconnect: (details) => {
       if (ending.current) return;
       console.warn("ElevenLabs disconnected", details);
@@ -58,7 +59,24 @@ function RealCall({ scenario, onEnd, onCancel, agentId, choice }: Props & { agen
       );
     },
   });
-  const { startSession, endSession, sendUserMessage, status, isSpeaking, getOutputVolume, getInputVolume } = conv;
+  const { startSession, endSession, sendUserMessage, setMuted, status, isSpeaking, getOutputVolume, getInputVolume } = conv;
+  const [bargeIn, setBargeIn] = useState(false);
+
+  // Speakers feed back into the mic and the agent treats that as an interruption (cut-off mid-sentence).
+  // Default: mic is muted while the customer talks. "Allow interrupting" turns that off (use headphones).
+  useEffect(() => {
+    if (choice.textOnly) return;
+    if (bargeIn) {
+      setMuted(false);
+      return;
+    }
+    if (isSpeaking) {
+      setMuted(true);
+      return;
+    }
+    const t = setTimeout(() => setMuted(false), 450);
+    return () => clearTimeout(t);
+  }, [isSpeaking, bargeIn, choice.textOnly, setMuted]);
 
   useEffect(() => {
     // ConversationProvider ends the session when it unmounts, and React StrictMode (dev)
@@ -103,6 +121,8 @@ function RealCall({ scenario, onEnd, onCancel, agentId, choice }: Props & { agen
       notice={notice}
       typing={typing}
       onTypingChange={setTyping}
+      bargeIn={bargeIn}
+      onBargeInChange={choice.textOnly ? undefined : setBargeIn}
       isSpeaking={isSpeaking}
       patience={patience}
       getOutLevel={getOutputVolume}

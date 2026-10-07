@@ -17,6 +17,8 @@ export default function CallView({
   notice,
   typing,
   onTypingChange,
+  bargeIn,
+  onBargeInChange,
   isSpeaking,
   patience,
   getOutLevel,
@@ -33,6 +35,8 @@ export default function CallView({
   notice: string | null;
   typing: boolean;
   onTypingChange: (v: boolean) => void;
+  bargeIn?: boolean;
+  onBargeInChange?: (v: boolean) => void;
   isSpeaking: boolean;
   patience: number;
   getOutLevel: () => number;
@@ -228,6 +232,15 @@ export default function CallView({
             />
             <button className="rounded-full bg-cyan px-5 text-sm font-bold text-ink active:scale-95">Send</button>
           </form>
+        )}
+        {onBargeInChange && (
+          <button
+            onClick={() => onBargeInChange(!bargeIn)}
+            aria-pressed={bargeIn}
+            className="mb-3 w-full rounded-full border border-white/15 px-4 py-2 font-mono text-[11px] uppercase tracking-widest text-slate-300 active:scale-95"
+          >
+            🎧 Allow interrupting: {bargeIn ? "on (use headphones)" : "off (mic muted while they talk)"}
+          </button>
         )}
         <div className="flex items-center gap-3">
           {!demo && (
