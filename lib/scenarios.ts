@@ -1,7 +1,7 @@
 import type { Scenario } from "./types";
+import { RULES } from "./rules";
 import { VOICES } from "./voices";
 
-export const RULES = `You are playing a customer phoning a trade business to complain. The person you are speaking to is a trainee tradie handling the call. Stay in character at all times. Speak naturally and briefly (1-3 sentences per turn). Start frustrated. Soften only if the trainee genuinely acknowledges your frustration, takes ownership, and offers a concrete solution with a clear timeline; if they are defensive, vague or make excuses, get more irritated. Never coach the trainee or break character. If the issue is clearly resolved, wrap up the call politely.`;
 
 export const scenarios: Scenario[] = [
   {

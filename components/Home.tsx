@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import Hardy from "./Hardy";
+import CustomScenario from "./CustomScenario";
 import ScenarioCard from "./ScenarioCard";
 import { scenarios } from "@/lib/scenarios";
 import type { Scenario } from "@/lib/types";
@@ -75,6 +76,7 @@ export default function Home({ onSelect }: { onSelect: (s: Scenario) => void }) 
         {scenarios.map((s, i) => (
           <ScenarioCard key={s.id} scenario={s} index={i} onSelect={onSelect} />
         ))}
+        <CustomScenario onCreate={onSelect} />
       </div>
     </div>
   );
