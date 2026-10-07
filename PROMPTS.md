@@ -44,3 +44,7 @@ System prompt:
 > {"scores":{"acknowledge":1-5,"empathise":1-5,"ownership":1-5,"solution":1-5,"timeline":1-5},"strength":"...","fix":"...","modelResponse":"..."}
 
 User message: `Scenario: <title - blurb>` followed by the `TRAINEE:` / `CUSTOMER:` transcript.
+
+## Step 5 - Debrief screen
+
+No new prompt; renders the JSON from the Step 4 prompt (score bars, strength, fix, model response).

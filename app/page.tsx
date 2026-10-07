@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ConversationProvider } from "@elevenlabs/react";
 import CallScreen from "@/components/CallScreen";
+import Debrief from "@/components/Debrief";
 import ScenarioCard from "@/components/ScenarioCard";
 import { scenarios } from "@/lib/scenarios";
 import type { Message, Scenario } from "@/lib/types";
@@ -21,6 +22,16 @@ export default function Home() {
             onCancel={() => setScenario(null)}
           />
         </ConversationProvider>
+      )}
+      {scenario && transcript && (
+        <Debrief
+          scenario={scenario}
+          transcript={transcript}
+          onRestart={() => {
+            setScenario(null);
+            setTranscript(null);
+          }}
+        />
       )}
       {!scenario && (
         <>
