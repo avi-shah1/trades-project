@@ -79,3 +79,13 @@ No new LLM prompt. `CustomerFace` is an SVG person (per-scenario look) driven by
 ## Step 10 - Animated debrief
 
 No new prompt. Debrief now shows Hardy reacting to the total (cool / happy / thinking / sad), an animated score ring with count-up, staggered score bars, and Nailed it / Level up / Hardy's take cards. Loading state is Hardy "thinking" with a scanning bar.
+7. > ok can you show me where the env file is so i can add in api stuff
+8. > can you create the env local for me
+9. > ok api keys in, can i do npm run dev now
+10. > yes its in the background rn, stop it
+11. > (pasted) Runtime Error: An unexpected Turbopack error occurred. Please see the output of `next dev` for more details.
+12. > (pasted) Console Error: hydration mismatch caused by browser-extension attributes (`bis_skin_checked`)
+13. > ok issue is it starts dialling but nothing ever loads after that
+
+### Fix: stuck on "Dialling…"
+Cause: the start effect's cleanup called `endSession()`; React StrictMode (dev) runs mount -> cleanup -> mount, which ended the call immediately while a ref guard prevented restarting. Removed the cleanup, added `onDisconnect` error messaging.

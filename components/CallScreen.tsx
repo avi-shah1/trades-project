@@ -27,6 +27,7 @@ function RealCall({ scenario, onEnd, onCancel, agentId }: Props & { agentId: str
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
+  const ending = useRef(false);
 
   const conv = useConversation({
     onMessage: ({ message, source }) => {
@@ -39,6 +40,13 @@ function RealCall({ scenario, onEnd, onCancel, agentId }: Props & { agentId: str
       });
     },
     onError: (message) => setError(String(message)),
+    onDisconnect: () => {
+      if (!ending.current) {
+        setError(
+          "The call dropped. Check the agent ID, and that System prompt and First message overrides are enabled in the agent's Security tab.",
+        );
+      }
+    },
   });
   const { startSession, endSession, sendUserMessage, status, isSpeaking, getOutputVolume, getInputVolume } = conv;
 
@@ -54,7 +62,8 @@ function RealCall({ scenario, onEnd, onCancel, agentId }: Props & { agentId: str
         },
       },
     });
-    return () => endSession();
+    // no cleanup: React StrictMode (dev) would end the call right after starting it.
+    // The call is ended explicitly from onEnd / onBack below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -81,10 +90,12 @@ function RealCall({ scenario, onEnd, onCancel, agentId }: Props & { agentId: str
       getInLevel={getInputVolume}
       onSend={send}
       onEnd={() => {
+        ending.current = true;
         endSession();
         onEnd(messages);
       }}
       onBack={() => {
+        ending.current = true;
         endSession();
         onCancel();
       }}
