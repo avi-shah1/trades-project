@@ -97,3 +97,7 @@ Added an explicit `getUserMedia` pre-flight before `startSession` with specific 
 
 ### Fix: mic check screen
 New `MicCheck` step before every real call: live input-level meter (Web Audio analyser), "Hearing you" confirmation, input device picker (passed to ElevenLabs as `inputDeviceId`), and a "Skip, I'll type instead" text-only option. Replaces the earlier silent `getUserMedia` pre-flight.
+16. > microphone working. but now elevenlabs voice not working: The call dropped. Check the agent ID, and that System prompt and First message overrides are enabled in the agent's Security tab.
+
+### Fix: voice call dropping
+Dev log only showed a generic LiveKit "error reading from signal stream" (default WebRTC transport). Forced `connectionType: "websocket"` and made the dropped-call message include ElevenLabs' actual disconnect reason/close code (also `console.warn`ed).

@@ -45,12 +45,18 @@ function RealCall({ scenario, onEnd, onCancel, agentId, choice }: Props & { agen
       });
     },
     onError: (message) => setError(String(message)),
-    onDisconnect: () => {
-      if (!ending.current) {
-        setError(
-          "The call dropped. Check the agent ID, and that System prompt and First message overrides are enabled in the agent's Security tab.",
-        );
-      }
+    onDisconnect: (details) => {
+      if (ending.current) return;
+      console.warn("ElevenLabs disconnected", details);
+      const why =
+        details.reason === "error"
+          ? details.message
+          : details.reason === "agent"
+            ? `the agent ended the call${details.closeReason ? `: ${details.closeReason}` : ""}${details.closeCode ? ` (code ${details.closeCode})` : ""}`
+            : "the call was closed";
+      setError(
+        `The call dropped (${why}). Check the agent ID, and that System prompt and First message overrides are enabled in the agent's Security tab.`,
+      );
     },
   });
   const { startSession, endSession, sendUserMessage, status, isSpeaking, getOutputVolume, getInputVolume } = conv;
@@ -60,6 +66,7 @@ function RealCall({ scenario, onEnd, onCancel, agentId, choice }: Props & { agen
     started.current = true;
     startSession({
       agentId,
+      connectionType: "websocket",
       inputDeviceId: choice.deviceId,
       overrides: {
         agent: {
