@@ -67,3 +67,7 @@ Added README with run notes; viewport and safe-area handling done in layout/page
 ## Step 7 - Futuristic brand foundation
 
 Brand: dark "hi-vis meets neon" look. Tokens: ink #070b14, hi-vis amber #ffc21a, cyan #29e3ff, magenta #ff3d8b, lime #7cff6b. Font Space Grotesk. Animated aurora + perspective grid backdrop, glass panels, shimmer wordmark. Mascot: **Hardy**, a hard-hat robot with a glowing visor face. Customers are expressive SVG people with mood-driven faces, audio-reactive mouths and a "Patience" meter.
+
+## Step 8 - Mascot + home
+
+Hardy the hard-hat robot (`components/Hardy.tsx`, pure SVG, blink loop, moods happy/wow/thinking/sad/cool), rotating coaching tips from Hardy, shimmer wordmark, glass scenario cards with accent glow, caller name and heat rating, staggered spring entrance (motion).

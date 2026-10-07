@@ -18,12 +18,23 @@ export type ScoreResult = {
   modelResponse: string;
 };
 
+export type Look = {
+  skin: string;
+  hair: string;
+  style: "short" | "long" | "cap";
+  beard?: boolean;
+};
+
 export type Scenario = {
   id: string;
   title: string;
   blurb: string;
   emoji: string;
   customerName: string;
+  accent: string;
+  heat: 1 | 2 | 3;
+  startPatience: number;
+  look: Look;
   customerPrompt: string;
   firstMessage: string;
 };
