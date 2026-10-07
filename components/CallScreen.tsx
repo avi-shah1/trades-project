@@ -60,23 +60,20 @@ function RealCall({ scenario, onEnd, onCancel, agentId, choice }: Props & { agen
     },
   });
   const { startSession, endSession, sendUserMessage, setMuted, status, isSpeaking, getOutputVolume, getInputVolume } = conv;
-  const [bargeIn, setBargeIn] = useState(false);
+  const [micMode, setMicMode] = useState<"push" | "open">("push");
+  const [talking, setTalking] = useState(false);
 
-  // Speakers feed back into the mic and the agent treats that as an interruption (cut-off mid-sentence).
-  // Default: mic is muted while the customer talks. "Allow interrupting" turns that off (use headphones).
+  // Walkie-talkie: the mic is muted (the SDK then sends silence) except while "talking".
+  // "Open mic" leaves it live, which only works well with headphones (speaker echo interrupts the customer).
   useEffect(() => {
-    if (choice.textOnly) return;
-    if (bargeIn) {
+    if (choice.textOnly || status !== "connected") return;
+    if (micMode === "open" || talking) {
       setMuted(false);
       return;
     }
-    if (isSpeaking) {
-      setMuted(true);
-      return;
-    }
-    const t = setTimeout(() => setMuted(false), 450);
+    const t = setTimeout(() => setMuted(true), 350); // small tail so the end of a sentence isn't clipped
     return () => clearTimeout(t);
-  }, [isSpeaking, bargeIn, choice.textOnly, setMuted]);
+  }, [talking, micMode, status, choice.textOnly, setMuted]);
 
   useEffect(() => {
     // ConversationProvider ends the session when it unmounts, and React StrictMode (dev)
@@ -121,8 +118,7 @@ function RealCall({ scenario, onEnd, onCancel, agentId, choice }: Props & { agen
       notice={notice}
       typing={typing}
       onTypingChange={setTyping}
-      bargeIn={bargeIn}
-      onBargeInChange={choice.textOnly ? undefined : setBargeIn}
+      mic={choice.textOnly ? undefined : { mode: micMode, talking, onTalkingChange: setTalking, onModeChange: setMicMode }}
       isSpeaking={isSpeaking}
       patience={patience}
       getOutLevel={getOutputVolume}

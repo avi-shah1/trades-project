@@ -122,3 +122,7 @@ System prompt (abridged):
 
 ### Fix: customer cut off mid-sentence
 Likely speaker-to-mic echo being treated as the trainee interrupting. The mic is now muted while the customer speaks (unmuted 450ms after), with an "Allow interrupting" toggle for headphone users, plus an `onInterruption` console warning to confirm the cause.
+21. > ok but now when i do speak it doesnt get registered. can we do like a click to speak kinda thing like a walkie talkie?
+
+### Step 13 - Push-to-talk
+Replaced the auto-mute-while-customer-speaks logic with a walkie-talkie `TalkButton`: hold to talk, quick tap to latch on / tap to stop, Space bar also works. The SDK sends silence while muted, so the agent ends its turn normally on release. "Open mic (headphones)" mode remains as a toggle.

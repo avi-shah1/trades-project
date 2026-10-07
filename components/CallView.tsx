@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useSpring, useTransform } from "motion/react";
 import CustomerFace from "./CustomerFace";
 import Waveform from "./Waveform";
@@ -8,6 +8,13 @@ import { MOOD_LABEL, moodFor } from "@/lib/patience";
 import type { Message, Scenario } from "@/lib/types";
 
 export type CallStatus = "connecting" | "live" | "error";
+
+export type MicControl = {
+  mode: "push" | "open";
+  talking: boolean;
+  onTalkingChange: (v: boolean) => void;
+  onModeChange: (m: "push" | "open") => void;
+};
 
 export default function CallView({
   scenario,
@@ -17,8 +24,7 @@ export default function CallView({
   notice,
   typing,
   onTypingChange,
-  bargeIn,
-  onBargeInChange,
+  mic,
   isSpeaking,
   patience,
   getOutLevel,
@@ -35,8 +41,7 @@ export default function CallView({
   notice: string | null;
   typing: boolean;
   onTypingChange: (v: boolean) => void;
-  bargeIn?: boolean;
-  onBargeInChange?: (v: boolean) => void;
+  mic?: MicControl;
   isSpeaking: boolean;
   patience: number;
   getOutLevel: () => number;
@@ -74,7 +79,11 @@ export default function CallView({
       ? "Dialling…"
       : isSpeaking
         ? `${scenario.customerName} is talking`
-        : "Your turn - speak up";
+        : mic?.mode === "push"
+          ? mic.talking
+            ? "Talking… release to send"
+            : "Hold the button to talk"
+          : "Your turn - speak up";
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -233,14 +242,16 @@ export default function CallView({
             <button className="rounded-full bg-cyan px-5 text-sm font-bold text-ink active:scale-95">Send</button>
           </form>
         )}
-        {onBargeInChange && (
-          <button
-            onClick={() => onBargeInChange(!bargeIn)}
-            aria-pressed={bargeIn}
-            className="mb-3 w-full rounded-full border border-white/15 px-4 py-2 font-mono text-[11px] uppercase tracking-widest text-slate-300 active:scale-95"
-          >
-            🎧 Allow interrupting: {bargeIn ? "on (use headphones)" : "off (mic muted while they talk)"}
-          </button>
+        {mic && (
+          <div className="mb-3 flex flex-col items-center gap-2">
+            {mic.mode === "push" && <TalkButton talking={mic.talking} setTalking={mic.onTalkingChange} accent={scenario.accent} />}
+            <button
+              onClick={() => mic.onModeChange(mic.mode === "push" ? "open" : "push")}
+              className="font-mono text-[11px] uppercase tracking-widest text-slate-400 underline-offset-4 hover:underline"
+            >
+              {mic.mode === "push" ? "Switch to open mic (headphones)" : "Switch to push-to-talk"}
+            </button>
+          </div>
         )}
         <div className="flex items-center gap-3">
           {!demo && (
@@ -267,5 +278,86 @@ export default function CallView({
         </div>
       </div>
     </motion.div>
+  );
+}
+
+/** Walkie-talkie button: hold to talk, or tap once to latch on and tap again to stop. Spacebar works too. */
+function TalkButton({
+  talking,
+  setTalking,
+  accent,
+}: {
+  talking: boolean;
+  setTalking: (v: boolean) => void;
+  accent: string;
+}) {
+  const downAt = useRef(0);
+  const latched = useRef(false);
+
+  const press = useCallback(() => {
+    if (latched.current) {
+      latched.current = false;
+      setTalking(false);
+      return;
+    }
+    downAt.current = Date.now();
+    setTalking(true);
+  }, [setTalking]);
+
+  const release = useCallback(() => {
+    if (latched.current) return;
+    if (Date.now() - downAt.current < 250) latched.current = true; // quick tap = latch on
+    else setTalking(false);
+  }, [setTalking]);
+
+  useEffect(() => {
+    const typingTarget = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA");
+    };
+    const down = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || e.repeat || typingTarget(e)) return;
+      e.preventDefault();
+      press();
+    };
+    const up = (e: KeyboardEvent) => {
+      if (e.code !== "Space" || typingTarget(e)) return;
+      e.preventDefault();
+      release();
+    };
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
+  }, [press, release]);
+
+  return (
+    <button
+      type="button"
+      onPointerDown={(e) => {
+        e.currentTarget.setPointerCapture(e.pointerId);
+        press();
+      }}
+      onPointerUp={release}
+      onPointerCancel={() => {
+        latched.current = false;
+        setTalking(false);
+      }}
+      onContextMenu={(e) => e.preventDefault()}
+      aria-pressed={talking}
+      className="relative flex h-20 w-full touch-none select-none items-center justify-center rounded-full text-base font-bold uppercase tracking-widest transition-colors"
+      style={{
+        background: talking ? "linear-gradient(135deg,#29e3ff,#7cff6b)" : "rgba(255,255,255,0.08)",
+        color: talking ? "#070b14" : "#e8ecf6",
+        border: `2px solid ${talking ? "#29e3ff" : accent}`,
+        boxShadow: talking ? "0 0 36px rgba(41,227,255,0.7)" : `0 0 18px ${accent}44`,
+        transform: talking ? "scale(0.98)" : undefined,
+      }}
+    >
+      {talking && <span className="absolute inset-0 animate-ping rounded-full border-2 border-cyan opacity-40" />}
+      <span className="relative">{talking ? "🎙 Talking… (release to send)" : "🎙 Hold to talk (or Space)"}</span>
+    </button>
   );
 }
