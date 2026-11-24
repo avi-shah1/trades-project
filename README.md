@@ -1,6 +1,8 @@
 # Tradie Talk
 
-Practise handling trade complaint calls. Pick a scenario, talk to an AI customer (ElevenLabs), then get a scored debrief (Anthropic).
+Practise handling trade complaint calls. Pick a scenario, talk to an AI customer, then get a scored debrief.
+
+Hackathon from [SF Tech Week](https://partiful.com/e/tjiOWQ6R0REOGWjUZ3Kf)
 
 ## Setup
 1. `cp .env.example .env.local` and fill in:
